@@ -36,10 +36,12 @@ class SparkParser:
         }
         self.jobHeaders = {"_":["Job ID","Submission Time","Stage IDs","Completion Time"]}
         self.tasksHeaders = {
+            #Default nesting level
             "_" : [
                 "Stage ID",
                 "Task Type",
             ],
+            #Inside Task Info
             "Task Info": [
                 "Task ID",
                 "Host",
@@ -49,6 +51,7 @@ class SparkParser:
                 "Finish Time",
                 "Getting Result Time"
             ],
+            #Inside Task Metrics
             "Task Metrics": [
                 "Executor Run Time",
                 "Executor Deserialize Time",
