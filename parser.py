@@ -1,6 +1,7 @@
 import json
 import csv
 import os
+import sys
 
 
 
@@ -184,3 +185,14 @@ class SparkParser:
             for record in item.records:
                 writer.writerow(l)
             item.file.close()
+
+def main():
+    args = sys.argv
+    if len(args > 2):
+        println("Too many args, needed just one")
+        exit(-1)
+    else:
+        parser = SparkParser(str(args[1]))
+
+if __name__ == "__main__":
+    main()
