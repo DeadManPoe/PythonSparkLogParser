@@ -1,3 +1,0 @@
-Task ID,Host,Executor ID,Locality,Launch Time,Finish Time,Getting Result Time,Executor Run Time,Executor Deserialize Time,JVM GC Time,Result Size,Memory Bytes Spilled,Disk Bytes Spilled,Stage ID,Task Type
-0,node003.pico.cineca.it,0,PROCESS_LOCAL,1479835140975,1479835143547,0,117,2376,0,1044,0,0,0,ResultTask
-1,node003.pico.cineca.it,0,PROCESS_LOCAL,1479835140992,1479835143548,0,118,2376,0,1044,0,0,0,ResultTask
