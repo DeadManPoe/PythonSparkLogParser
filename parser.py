@@ -1,11 +1,27 @@
 import json
 import csv
+import os
+
 
 
 class SparkParser:
-    def __init__(self,file):
-        self.file = file
+    def __init__(self,filename):
+
+        if os.path.exists(file):
+            try:
+                self.file = open(file, "r")
+            except:
+                println("Reading error")
+                exit(-1)
+        else:
+            println("The inserted file does not exists")
+            exit(-1)
+
+        #Class props
         self.tasksCSVInfo = []
+        self.stagesCSVInfo = []
+        self.jobsCSVInfo = []
+        self.appCSVInfo = []
         self.stageHeaders = {
             "Stage Info" : [
                 "Stage ID",
@@ -16,7 +32,7 @@ class SparkParser:
                 "Completion Time",
                 "Executed"
             ]
-        },
+        }
         self.jobHeaders = {
             "_": [
                 "JOB ID",
@@ -58,6 +74,18 @@ class SparkParser:
                 "Shuffle Local Bytes Read"
             ]
         }
+        self.applicationHeaders : {
+            "_": [
+                "App ID",
+                "Timestamp",
+            ]
+        }
+        #Business Logic
+        prinln("Starting parsing")
+        self.parse()
+        println("Starting saving files")
+        self.produceCSVs()
+        println("Finished")
 
     def tasksParse(self,line):
         record = []
@@ -68,7 +96,7 @@ class SparkParser:
                     if field != "_":
                         for sub_field in field:
                             record.append(data[field][subfield])
-                    else
+                    else:
                         record.append(data[field])
                 self.tasksCSVInfo.append(record)
 
@@ -81,84 +109,78 @@ class SparkParser:
             if field != "_":
                 for sub_field in field:
                     record.append(data[field][subfield])
-            else
+            else:
                 record.append(data[field])
         self.stagesCSVInfo.append(record)
 
-    def jobParse(self,line):
+    def jobParse(self, data):
         for field in self.stageHeaders:
             if field != "_":
                 for sub_field in field:
                     record.append(data[field][subfield])
-            else
+            else:
                 record.append(data[field])
-        self.stagesCSVInfo.append(record)
+        self.jobsCSVInfo.append(record)
+
+    def applicationParse(self,data):
+        for field in self.stageHeaders:
+            if field != "_":
+                for sub_field in field:
+                    record.append(data[field][subfield])
+            else:
+                record.append(data[field])
+        self.appCSVInfo.append(record)
 
     def parse(self):
         for line in self.file:
+            try:
+                data = json.loads(line)
+                event = data["Event"]
+                if event == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
+                    self.tasksParse(data)
+                elif event == "SparkListenerStageCompleted"
+                    self.stageParse(data)
+                elif event == "SparkListenerJobEnd"
+                    self.jobParse(data)
+                elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd";
 
+            except json.decoder.JSONDecodeError:
+                print("Line not decoded " + line)
 
+    def normalizeHeaders(self, headersDict):
+        returnList = []
+        for field in headersDict:
+            for subfield in headersDict[field]:
+                returnList.append(headersDict[field][subfield])
 
+        return returnList
 
-
-
-
-header = ["id", "stageId", "execID", "host", "type", "executionTime", "finishTime", "startTime", "locality"]
-
-task_details = []
-
-with open("D:/app-20161122181853-0000-Cineca1_6.txt") as app_log:
-
-    for line in app_log:
-
-        try:
-
-            data = json.loads(line)
-
-            l = []
-
-            if data["Event"] == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
-
-                # print(data)
-
-                l.append(data["Task Info"]["Task ID"])
-
-                l.append(data["Stage ID"])
-
-                l.append(data["Task Info"]["Executor ID"])
-
-                l.append(data["Task Info"]["Host"])
-
-                l.append(data["Task Type"])
-
-                l.append(data["Task Metrics"]["Executor Run Time"])
-
-				l.append(data["Task Info"]["Finish Time"])
-
-                l.append(data["Task Info"]["Launch Time"])
-
-                l.append(data["Task Info"]["Locality"])
-
-                task_details.append(l)
-
-        except json.decoder.JSONDecodeError:
-
-            print("Line not decoded " + line)
-
-
-
-
-
-with open("D:/app-20161122181853-0000-Cineca1_6.csv", "w") as app_out:
-
-    writer = csv.writer(app_out, delimiter=',', lineterminator='\n')
-
-    writer.writerow(header)
-
-    for l in task_details:
-
-        writer.writerow(l)
-
-
-
-print(task_details)
+    def produceCSVs(self):
+        csvTasks = [
+            {
+                file : open("tasks_"+self.appId+".csv","w"),
+                records : self.tasksCSVInfo,
+                headers : normalizeHeaders(self.tasksHeaders)
+            },
+            {
+                file : open("jobs_"+self.appId+".csv","w"),
+                records : self.jobsCSVInfo,
+                headers : normalizeHeaders(self.jobsCSVInfo)
+            },
+            {
+                file : open("stages_"+self.appId+".csv","w"),
+                records : self.stagesCSVInfo,
+                headers : normalizeHeaders(self.stagesHeaders)
+            },
+            {
+                file : open("app_"+self.appId+".csv","w"),
+                records : self.appCSVInfo,
+                headers : normalizeHeaders(self.appHeaders)
+            }
+        }
+        for item in csvTasks:
+            writer = csv.writer(item.file, delimiter=',', lineterminator='\n')
+            writer.writerow(item.headers)
+            for record in item.records:
+                writer.writerow(l)
+            item.file.close()
