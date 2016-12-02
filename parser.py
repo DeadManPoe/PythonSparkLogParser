@@ -34,12 +34,18 @@ class SparkParser:
                 "Completion Time"
             ]
         }
-        self.jobHeaders = {
+        self.jobHeaders = {"_":["Job ID","Submission Time","Stage IDs","Completion Time"]}
+        self.jobHeadersStart = {
             "_": [
-                "JOB ID",
+                "Job ID",
                 "Submission Time",
-                "Completion Time",
                 "Stage IDs"
+            ]
+        }
+        self.jobHeadersEnd = {
+            "_": [
+                "Job ID",
+                "Completion Time"
             ]
         }
         self.tasksHeaders = {
@@ -83,29 +89,55 @@ class SparkParser:
         for field,value in self.tasksHeaders.iteritems():
             for sub_field in value:
                 if(field == "_"):
-                    record.append(data[sub_field])
+                    try:
+                        record.append(data[sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
                 else:
-                    record.append(data[field][sub_field])
+                    try:
+                        record.append(data[field][sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
         self.tasksCSVInfo.append(record)
     def stageParse(self,data):
         record = []
         for field,value in self.stageHeaders.iteritems():
             for sub_field in value:
                 if(field == "_"):
-                    record.append(data[sub_field])
+                    try:
+                        record.append(data[sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
                 else:
-                    record.append(data[field][sub_field])
+                    try:
+                        record.append(data[field][sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
         self.stagesCSVInfo.append(record)
 
-    def jobParse(self, data):
+    def jobParse(self, data, isEndJob = False):
         record = []
+        headers = {}
         for field,value in self.jobHeaders.iteritems():
+            print(value)
             for sub_field in value:
                 print(sub_field)
                 if(field == "_"):
-                    record.append(data[sub_field])
+                    try:
+                        record.append(data[sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
                 else:
-                    record.append(data[field][sub_field])
+                    try:
+                        record.append(data[field][sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
         self.jobsCSVInfo.append(record)
 
     def applicationParse(self,data):
@@ -113,9 +145,17 @@ class SparkParser:
         for field,value in self.applicationHeaders.iteritems():
             for sub_field in value:
                 if(field == "_"):
-                    record.append(data[sub_field])
+                    try:
+                        record.append(data[sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
                 else:
-                    record.append(data[field][sub_field])
+                    try:
+                        record.append(data[field][sub_field])
+                    except KeyError:
+                        record.append("NOVAL")
+                        continue
         self.appCSVInfo.append(record)
 
     def parse(self):
@@ -127,12 +167,12 @@ class SparkParser:
                    self.tasksParse(data)
                 elif event == "SparkListenerStageCompleted":
                     self.stageParse(data)
-                elif event == "SparkListenerJobEnd":
+                elif event == "SparkListenerJobStart" or event == "SparkListenerJobEnd":
                     self.jobParse(data)
-                elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd":
+                elif event == "SparkListenerApplicationStart" or event =="SparkListenerApplicationEnd":
                     self.applicationParse(data)
 
-            except Exception,e: print(e)
+            except Exception,e: print("Error"+str(e))
 
     def normalizeHeaders(self, headersDict):
         returnList = []
@@ -143,6 +183,7 @@ class SparkParser:
         return returnList
 
     def produceCSVs(self):
+        print(self.jobsCSVInfo)
         csvTasks = [
             {
                 "file" : open("./output/tasks_"+self.appId+".csv","w"),
