@@ -6,7 +6,7 @@ import sys
 
 
 class SparkParser:
-    def __init__(self,filename):
+    def __init__(self,filename,appId):
 
         if os.path.exists(file):
             try:
@@ -19,6 +19,7 @@ class SparkParser:
             exit(-1)
 
         #Class props
+        self.appId = appId
         self.tasksCSVInfo = []
         self.stagesCSVInfo = []
         self.jobsCSVInfo = []
@@ -188,11 +189,11 @@ class SparkParser:
 
 def main():
     args = sys.argv
-    if len(args > 2):
-        println("Too many args, needed just one")
+    if len(args) != 3:
+        println("Required args: [LOG_FILE_TO_PARS] [ID_FOR_CSV_NAMING]")
         exit(-1)
     else:
-        parser = SparkParser(str(args[1]))
+        parser = SparkParser(str(args[1]),str(args[2]))
 
 if __name__ == "__main__":
     main()
