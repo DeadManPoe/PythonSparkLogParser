@@ -35,19 +35,6 @@ class SparkParser:
             ]
         }
         self.jobHeaders = {"_":["Job ID","Submission Time","Stage IDs","Completion Time"]}
-        self.jobHeadersStart = {
-            "_": [
-                "Job ID",
-                "Submission Time",
-                "Stage IDs"
-            ]
-        }
-        self.jobHeadersEnd = {
-            "_": [
-                "Job ID",
-                "Completion Time"
-            ]
-        }
         self.tasksHeaders = {
             "_" : [
                 "Stage ID",
@@ -123,9 +110,7 @@ class SparkParser:
         record = []
         headers = {}
         for field,value in self.jobHeaders.iteritems():
-            print(value)
             for sub_field in value:
-                print(sub_field)
                 if(field == "_"):
                     try:
                         record.append(data[sub_field])
@@ -172,7 +157,7 @@ class SparkParser:
                 elif event == "SparkListenerApplicationStart" or event =="SparkListenerApplicationEnd":
                     self.applicationParse(data)
 
-            except Exception,e: print("Error"+str(e))
+            except Exception,e: ("Error"+str(e))
 
     def normalizeHeaders(self, headersDict):
         returnList = []
@@ -183,7 +168,6 @@ class SparkParser:
         return returnList
 
     def produceCSVs(self):
-        print(self.jobsCSVInfo)
         csvTasks = [
             {
                 "file" : open("./output/tasks_"+self.appId+".csv","w"),
@@ -207,7 +191,6 @@ class SparkParser:
             }
         ]
         for item in csvTasks:
-            print item["headers"]
             writer = csv.writer(item["file"], delimiter=',', lineterminator='\n')
             writer.writerow(item["headers"])
             for record in item["records"]:
