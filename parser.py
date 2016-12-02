@@ -8,14 +8,14 @@ import sys
 class SparkParser:
     def __init__(self,filename,appId):
 
-        if os.path.exists(file):
+        if os.path.exists(filename):
             try:
-                self.file = open(file, "r")
+                self.file = open(filename, "r")
             except:
-                println("Reading error")
+                print("Reading error")
                 exit(-1)
         else:
-            println("The inserted file does not exists")
+            print("The inserted file does not exists")
             exit(-1)
 
         #Class props
@@ -76,37 +76,30 @@ class SparkParser:
                 "Shuffle Local Bytes Read"
             ]
         }
-        self.applicationHeaders : {
+        self.applicationHeaders = {
             "_": [
                 "App ID",
                 "Timestamp",
             ]
         }
         #Business Logic
-        prinln("Starting parsing")
+        print("Starting parsing")
         self.parse()
-        println("Starting saving files")
+        print("Starting saving files")
         self.produceCSVs()
-        println("Finished")
+        print("Finished")
 
-    def tasksParse(self,line):
+    def tasksParse(self,data):
         record = []
-        try
-            data = json.loads(line)
-            if data["Event"] == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
-                for field in self.tasksHeaders:
-                    if field != "_":
-                        for sub_field in field:
-                            record.append(data[field][subfield])
-                    else:
-                        record.append(data[field])
-                self.tasksCSVInfo.append(record)
+        for field in self.tasksHeaders:
+            if field != "_":
+                for sub_field in field:
+                    record.append(data[field][subfield])
+            else:
+                record.append(data[field])
+        self.tasksCSVInfo.append(record)
 
-        except json.decoder.JSONDecodeError:
-            print("Line not decoded " + line)
-
-
-    def stageParse(self,line):
+    def stageParse(self,data):
         for field in self.stageHeaders:
             if field != "_":
                 for sub_field in field:
@@ -140,57 +133,59 @@ class SparkParser:
                 event = data["Event"]
                 if event == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
                     self.tasksParse(data)
-                elif event == "SparkListenerStageCompleted"
+                elif event == "SparkListenerStageCompleted":
                     self.stageParse(data)
-                elif event == "SparkListenerJobEnd"
+                elif event == "SparkListenerJobEnd":
                     self.jobParse(data)
-                elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd";
+                elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd":
+                    self.applicationParse(data)
 
-            except json.decoder.JSONDecodeError:
+            except:
                 print("Line not decoded " + line)
 
     def normalizeHeaders(self, headersDict):
         returnList = []
         for field in headersDict:
             for subfield in headersDict[field]:
-                returnList.append(headersDict[field][subfield])
+                returnList.append(subfield)
 
         return returnList
 
     def produceCSVs(self):
         csvTasks = [
             {
-                file : open("tasks_"+self.appId+".csv","w"),
-                records : self.tasksCSVInfo,
-                headers : normalizeHeaders(self.tasksHeaders)
+                "file" : open("tasks_"+self.appId+".csv","w"),
+                "records" : self.tasksCSVInfo,
+                "headers" : self.normalizeHeaders(self.tasksHeaders)
             },
             {
-                file : open("jobs_"+self.appId+".csv","w"),
-                records : self.jobsCSVInfo,
-                headers : normalizeHeaders(self.jobsCSVInfo)
+                "file" : open("jobs_"+self.appId+".csv","w"),
+                "records" : self.jobsCSVInfo,
+                "headers" : self.normalizeHeaders(self.jobHeaders)
             },
             {
-                file : open("stages_"+self.appId+".csv","w"),
-                records : self.stagesCSVInfo,
-                headers : normalizeHeaders(self.stagesHeaders)
+                "file" : open("stages_"+self.appId+".csv","w"),
+                "records" : self.stagesCSVInfo,
+                "headers" : self.normalizeHeaders(self.stageHeaders)
             },
             {
-                file : open("app_"+self.appId+".csv","w"),
-                records : self.appCSVInfo,
-                headers : normalizeHeaders(self.appHeaders)
+                "file" : open("app_"+self.appId+".csv","w"),
+                "records" : self.appCSVInfo,
+                "headers" : self.normalizeHeaders(self.applicationHeaders)
             }
-        }
+        ]
         for item in csvTasks:
-            writer = csv.writer(item.file, delimiter=',', lineterminator='\n')
-            writer.writerow(item.headers)
-            for record in item.records:
-                writer.writerow(l)
-            item.file.close()
+            print item["headers"]
+            #writer = csv.writer(item["file"], delimiter=',', lineterminator='\n')
+            #writer.writerow(item["headers"])
+            #for record in item["records"]:
+            #    writer.writerow(l)
+            #item["file"].close()
 
 def main():
     args = sys.argv
     if len(args) != 3:
-        println("Required args: [LOG_FILE_TO_PARS] [ID_FOR_CSV_NAMING]")
+        print("Required args: [LOG_FILE_TO_PARS] [ID_FOR_CSV_NAMING]")
         exit(-1)
     else:
         parser = SparkParser(str(args[1]),str(args[2]))
