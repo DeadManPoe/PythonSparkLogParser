@@ -6,17 +6,31 @@ class SparkParser:
     def __init__(self,file):
         self.file = file
         self.tasksCSVInfo = []
-        self.stageHeaders = [
-            "Stage ID",
-            "Stage Name",
-            
-        ]
+        self.stageHeaders = {
+            "Stage Info" : [
+                "Stage ID",
+                "Stage Name",
+                "Parent IDs",
+                "Number of Tasks",
+                "Submission Time",
+                "Completion Time",
+                "Executed"
+            ]
+        },
+        self.jobHeaders = {
+            "_": [
+                "JOB ID",
+                "Submission Time",
+                "Completion Time",
+                "Stage IDs"
+            ]
+        }
         self.tasksHeaders = {
-            "firstLevelFields" : [
+            "_" : [
                 "Stage ID",
                 "Task Type",
             ],
-            "taskInfos": [
+            "Task Info": [
                 "Task ID",
                 "Host",
                 "Executor Id",
@@ -26,7 +40,7 @@ class SparkParser:
                 "Finish Time",
                 "Getting Result Time"
             ],
-            "taskMetrics": [
+            "Task Metrics": [
                 "Executor Run Time",
                 "Executor Deserializer Time",
                 "Result Serialization Time",
@@ -50,12 +64,12 @@ class SparkParser:
         try
             data = json.loads(line)
             if data["Event"] == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
-                for field in self.tasksHeaders["firstLevelFields"]:
-                    record.append(data[field])
-                for field in self.tasksHeaders["taskInfos"]:
-                    record.append(data[field])
-                for field in self.tasksHeaders["taskMetrics"]:
-                    record.append(data[field])
+                for field in self.tasksHeaders:
+                    if field != "_":
+                        for sub_field in field:
+                            record.append(data[field][subfield])
+                    else
+                        record.append(data[field])
                 self.tasksCSVInfo.append(record)
 
         except json.decoder.JSONDecodeError:
@@ -63,8 +77,22 @@ class SparkParser:
 
 
     def stageParse(self,line):
-        if data["Event"] == "SparkListenerStageSubmitted":
+        for field in self.stageHeaders:
+            if field != "_":
+                for sub_field in field:
+                    record.append(data[field][subfield])
+            else
+                record.append(data[field])
+        self.stagesCSVInfo.append(record)
 
+    def jobParse(self,line):
+        for field in self.stageHeaders:
+            if field != "_":
+                for sub_field in field:
+                    record.append(data[field][subfield])
+            else
+                record.append(data[field])
+        self.stagesCSVInfo.append(record)
 
     def parse(self):
         for line in self.file:
