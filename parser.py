@@ -10,7 +10,7 @@ class SparkParser:
 
         if os.path.exists(filename):
             try:
-                self.file = open(filename, "r")
+                self.file = open(filename)
             except:
                 print("Reading error")
                 exit(-1)
@@ -51,7 +51,7 @@ class SparkParser:
             "Task Info": [
                 "Task ID",
                 "Host",
-                "Executor Id",
+                "Executor ID",
                 "Locality",
                 "Launch Time",
                 "Start Time"
@@ -86,18 +86,21 @@ class SparkParser:
         print("Starting parsing")
         self.parse()
         print("Starting saving files")
-        self.produceCSVs()
+        #self.produceCSVs()
         print("Finished")
 
     def tasksParse(self,data):
         record = []
-        for field in self.tasksHeaders:
+        for field,value in self.tasksHeaders.iteritems():
             if field != "_":
-                for sub_field in field:
-                    record.append(data[field][subfield])
+                for sub_field in value:
+                    record.append(data[field][sub_field])
             else:
                 record.append(data[field])
-        self.tasksCSVInfo.append(record)
+
+
+        print("dasdas")
+
 
     def stageParse(self,data):
         for field in self.stageHeaders:
@@ -133,15 +136,14 @@ class SparkParser:
                 event = data["Event"]
                 if event == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
                     self.tasksParse(data)
-                elif event == "SparkListenerStageCompleted":
-                    self.stageParse(data)
-                elif event == "SparkListenerJobEnd":
-                    self.jobParse(data)
-                elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd":
-                    self.applicationParse(data)
+                #elif event == "SparkListenerStageCompleted":
+                #    self.stageParse(data)
+                #elif event == "SparkListenerJobEnd":
+                #    self.jobParse(data)
+                #elif event == "SparkListenerApplicationStart" or event == "SparkListenerApplicationEnd":
+                #    self.applicationParse(data)
 
-            except:
-                print("Line not decoded " + line)
+            except Exception,e: print str(e)
 
     def normalizeHeaders(self, headersDict):
         returnList = []
@@ -154,22 +156,22 @@ class SparkParser:
     def produceCSVs(self):
         csvTasks = [
             {
-                "file" : open("tasks_"+self.appId+".csv","w"),
+                "file" : open("./output/tasks_"+self.appId+".csv","w"),
                 "records" : self.tasksCSVInfo,
                 "headers" : self.normalizeHeaders(self.tasksHeaders)
             },
             {
-                "file" : open("jobs_"+self.appId+".csv","w"),
+                "file" : open("./output/jobs_"+self.appId+".csv","w"),
                 "records" : self.jobsCSVInfo,
                 "headers" : self.normalizeHeaders(self.jobHeaders)
             },
             {
-                "file" : open("stages_"+self.appId+".csv","w"),
+                "file" : open("./output/stages_"+self.appId+".csv","w"),
                 "records" : self.stagesCSVInfo,
                 "headers" : self.normalizeHeaders(self.stageHeaders)
             },
             {
-                "file" : open("app_"+self.appId+".csv","w"),
+                "file" : open("./output/app_"+self.appId+".csv","w"),
                 "records" : self.appCSVInfo,
                 "headers" : self.normalizeHeaders(self.applicationHeaders)
             }
