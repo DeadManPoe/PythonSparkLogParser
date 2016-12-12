@@ -69,7 +69,7 @@ class SparkParser:
         }
         #Business Logic
         print("Start parsing")
-        self.parse()
+        self.parseSwitch()
         print("Start saving files")
         self.produceCSVs()
         print("Finished")
@@ -106,7 +106,7 @@ class SparkParser:
                 elif event == "SparkListenerApplicationStart" or event =="SparkListenerApplicationEnd":
                     self.parse(data,self.applicationHeaders, self.appCSVInfo)
 
-            except Exception e:
+            except Exception as e:
                 print("Error "+str(e))
 
     def normalizeHeaders(self, headersDict):
