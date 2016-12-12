@@ -78,18 +78,15 @@ class SparkParser:
         record = []
         for field,value in headers.iteritems():
             for sub_field in value:
-                if(field == "_"):
-                    try:
+                try:
+                    if(field == "_"):
                         record.append(data[sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-                else:
-                    try:
+                    else:
                         record.append(data[field][sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
+                except KeyError:
+                    record.append("NOVAL")
+                    continue
+
         csvinfo.append(record)
 
     def parseSwitch(self):
