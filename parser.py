@@ -68,15 +68,15 @@ class SparkParser:
             ]
         }
         #Business Logic
-        print("Starting parsing")
+        print("Start parsing")
         self.parse()
-        print("Starting saving files")
+        print("Start saving files")
         self.produceCSVs()
         print("Finished")
 
-    def tasksParse(self,data):
+    def parse(self, data, headers, csvinfo):
         record = []
-        for field,value in self.tasksHeaders.iteritems():
+        for field,value in headers.iteritems():
             for sub_field in value:
                 if(field == "_"):
                     try:
@@ -90,77 +90,24 @@ class SparkParser:
                     except KeyError:
                         record.append("NOVAL")
                         continue
-        self.tasksCSVInfo.append(record)
-    def stageParse(self,data):
-        record = []
-        for field,value in self.stageHeaders.iteritems():
-            for sub_field in value:
-                if(field == "_"):
-                    try:
-                        record.append(data[sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-                else:
-                    try:
-                        record.append(data[field][sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-        self.stagesCSVInfo.append(record)
+        csvinfo.append(record)
 
-    def jobParse(self, data, isEndJob = False):
-        record = []
-        headers = {}
-        for field,value in self.jobHeaders.iteritems():
-            for sub_field in value:
-                if(field == "_"):
-                    try:
-                        record.append(data[sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-                else:
-                    try:
-                        record.append(data[field][sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-        self.jobsCSVInfo.append(record)
-
-    def applicationParse(self,data):
-        record = []
-        for field,value in self.applicationHeaders.iteritems():
-            for sub_field in value:
-                if(field == "_"):
-                    try:
-                        record.append(data[sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-                else:
-                    try:
-                        record.append(data[field][sub_field])
-                    except KeyError:
-                        record.append("NOVAL")
-                        continue
-        self.appCSVInfo.append(record)
-
-    def parse(self):
+    def parseSwitch(self):
         for line in self.file:
             try:
                 data = json.loads(line)
                 event = data["Event"]
                 if event == "SparkListenerTaskEnd" and not data["Task Info"]["Failed"]:
-                   self.tasksParse(data)
+                    self.parse(data,self.tasksHeaders,self.tasksCSVInfo)
                 elif event == "SparkListenerStageCompleted":
-                    self.stageParse(data)
+                    self.parse(data,self.stageHeaders,self.stagesCSVInfo)
                 elif event == "SparkListenerJobStart" or event == "SparkListenerJobEnd":
-                    self.jobParse(data)
+                    self.parse(data,self.jobHeaders, self.jobsCSVInfo)
                 elif event == "SparkListenerApplicationStart" or event =="SparkListenerApplicationEnd":
-                    self.applicationParse(data)
+                    self.parse(data,self.applicationHeaders, self.appCSVInfo)
 
-            except Exception,e: ("Error"+str(e))
+            except Exception e:
+                print("Error "+str(e))
 
     def normalizeHeaders(self, headersDict):
         returnList = []
